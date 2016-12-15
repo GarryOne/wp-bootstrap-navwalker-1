@@ -23,13 +23,21 @@ class wp_bootstrap_navwalker_child extends Walker_Nav_Menu {
         $indent = str_repeat( "\t", $depth );
 
         $ul_id = '';
-        $pattern = '/<a.+data-target="#(.+?)".*<\/a>$/';
+        $pattern = '/<span.+data-target="#(.+?)".*<\/span><\/a>$/';
         preg_match($pattern, $output, $matches);
         if(count($matches)) {
             $ul_id = $matches[1];
         }
 
-        $output .= "\n$indent<ul role=\"menu\" class=\"nav collapse list-group\" id=\"".$ul_id."\">\n";
+        $class_collapse = 'collapse';
+        $pattern = '/<li.+current-menu-ancestor.+><a.+<\/a>$/';
+        preg_match($pattern, $output, $matches);
+        if(count($matches)) {
+            $class_collapse .= ' in';
+        }
+
+
+        $output .= "\n$indent<ul role=\"menu\" class=\"nav ".$class_collapse." list-group\" id=\"".$ul_id."\">\n";
     }
 
     /**
@@ -87,19 +95,8 @@ class wp_bootstrap_navwalker_child extends Walker_Nav_Menu {
             $atts['title']  = ! empty( $item->title )	? $item->title	: '';
             $atts['target'] = ! empty( $item->target )	? $item->target	: '';
             $atts['rel']    = ! empty( $item->xfn )		? $item->xfn	: '';
-            
             $atts['class'] = 'list-group-item';
-
-            // If item has_children add atts to a.
-            if ( $args->has_children ) {
-                //$atts['href']   	= '#';
-                $atts['data-toggle']	= 'collapse';
-                $atts['data-target']    = '#sub-menu-'.rand(100, 999);
-                $atts['aria-expanded']	= 'false';
-                //$atts['aria-haspopup']	= 'true';
-            } else {
-                $atts['href'] = ! empty( $item->url ) ? $item->url : '';
-            }
+            $atts['href'] = ! empty( $item->url ) ? $item->url : '';
 
             $atts = apply_filters( 'nav_menu_link_attributes', $atts, $item, $args );
 
@@ -126,7 +123,7 @@ class wp_bootstrap_navwalker_child extends Walker_Nav_Menu {
                 $item_output .= '<a'. $attributes .'>';
 
             $item_output .= $args->link_before . apply_filters( 'the_title', $item->title, $item->ID ) . $args->link_after;
-            $item_output .= ( $args->has_children) ? ' <span class="caret"></span></a>' : '</a>';
+            $item_output .= ( $args->has_children) ? ' <span class="caret" data-toggle="collapse" data-target="'.'#sub-menu-'.rand(100, 999).'" onClick="return false;" ></span></a>' : '</a>';
             $item_output .= $args->after;
 
             $output .= apply_filters( 'walker_nav_menu_start_el', $item_output, $item, $depth, $args );
